@@ -2,7 +2,7 @@
 # uses this file as the main entry point of the application.
 import os, osproc, strutils, json
   
-const DEFAULT_BROWSERS = "x-www-browser:firefox:iceweasel:seamonkey:mozilla:epiphany:konqueror:chromium:chromium-browser:google-chrome"
+const DEFAULT_BROWSERS = ":x-www-browser:firefox:iceweasel:seamonkey:mozilla:epiphany:konqueror:chromium:chromium-browser:google-chrome"
 
 type 
   UrlLink = object
@@ -13,6 +13,7 @@ proc find_browser(): string =
   let browsers: seq[string] = (browser_var & DEFAULT_BROWSERS).split(":")
 
   for browser in browsers:
+    echo "browser: " & browser
     if browser.existsFile():
       return browser
   
@@ -27,11 +28,16 @@ proc open_browser_envvar() =
 
   let web_link = args[0]
 
-  if not web_link.fileExists():
+  if  web_link.fileExists():
+    echo "Found web file: " & web_link
+  else:
     raise newException(ValueError, "Dropbox Web file not found!")
 
-  let web_link_json: JsonNode = web_link.parseJson()
+  let web_link_file = web_link.readFile()
+  let web_link_json: JsonNode = parseJson(web_link_file)
+
   let web = to(web_link_json, UrlLink)
+  echo "Using web link: " & web.url
 
   let (_, errC) = execCmdEx(browser & " " & web.url)
 
